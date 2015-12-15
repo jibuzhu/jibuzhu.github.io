@@ -1,0 +1,349 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="baidu-site-verification" content="kZTDgOmgCR" /> <!-- baidu verification index -->
+  
+  <title>shell信号处理 | 呼吸着回忆</title>
+  <meta name="author" content="大白菜2块一斤">
+  
+  <meta name="description" content="我们写c/c++，java，python应该都见过信号处理，写shell也用过，不过最多的是ctrl+c，kill -9，之前我也不知道shell有信号处理这个机制，我们要更新或者停止就立马kill，就像正好好在吃饭，突然你就粗暴的把桌子掀了！
+其实我们完全可以委婉，温柔点对待它的。">
+  
+  <meta name="keywords" content="shell信号处理,shell,信号处理,trap">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="shell信号处理"/>
+  <meta property="og:site_name" content="呼吸着回忆"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  
+  
+    <link href="/img/ico/favicon.ico" rel="icon">
+  
+  
+  <!--[if !IE]><!--> 
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/responsive.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <!--link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css"-->
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics and baidu auto push -->
+  
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?5225f43412c0b3a75dd206a6e36ab7d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<script>
+(function(){
+    var bp = document.createElement('script');
+    bp.src = '//push.zhanzhang.baidu.com/push.js';
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+  <!--<![endif]-->
+
+</head>
+
+  <body>  
+  <!--[if IE]>
+  <div style=" text-align:center">
+  对不起啊，不是我歧视IE浏览器，是真的不知道该怎么去兼容它!--radishqiu
+  </div>
+  <![endif]-->
+  <!--[if !IE]><!-->
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<div class="container">
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#example-navbar-collapse">
+			<span class="sr-only">-menu-</span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/" title="home"><img class="logo" src="/img/ico/favicon.ico"></img></a>
+	</div>
+	<div class="navbar-collapse collapse" id="example-navbar-collapse" style="height: 1px;">
+		<ul class="nav navbar-nav">
+			
+			
+			
+			 
+			<li  class="dropdown" >
+				<a href="/tags/回忆录" class="dropdown-toggle" data-toggle="dropdown">
+				    <i class="fa fa-folder"></i>回忆录<b class="caret"></b>
+				</a>
+				
+				<ul class="dropdown-menu">
+					
+					<li><a href="/tags/回忆录">全部</a></li>
+					
+					<li><a href="/tags/随笔">随笔</a></li>
+					
+					<li><a href="/tags/我的大学">我的大学</a></li>
+					
+					<li><a href="/tags/走出大学">走出大学</a></li>
+					
+				</ul>
+				
+			</li>
+			
+			
+			 
+			<li  class="dropdown active" >
+				<a href="/tags/猿世界" class="dropdown-toggle" data-toggle="dropdown">
+				    <i class="fa fa-desktop"></i>猿世界<b class="caret"></b>
+				</a>
+				
+				<ul class="dropdown-menu">
+					
+					<li><a href="/tags/猿世界">全部</a></li>
+					
+					<li><a href="/tags/脚本">脚本</a></li>
+					
+					<li><a href="/tags/操作系统">操作系统</a></li>
+					
+				</ul>
+				
+			</li>
+			
+			
+			 
+			<li >
+				<a href="/message" >
+				    <i class="fa fa-comment"></i>留言板
+				</a>
+				
+			</li>
+			
+			
+			 
+			<li  class="dropdown" >
+				<a href="/download" class="dropdown-toggle" data-toggle="dropdown">
+				    <i class="fa fa-cloud-download"></i>下载<b class="caret"></b>
+				</a>
+				
+				<ul class="dropdown-menu">
+					
+					<li><a href="/download/novel">小说</a></li>
+					
+					<li><a href="/download/soft">软件</a></li>
+					
+				</ul>
+				
+			</li>
+			
+			
+			 
+			<li >
+				<a href="/about" >
+				    <i class="fa fa-user"></i>关于我
+				</a>
+				
+			</li>
+			
+		</ul>
+	</div>
+</div> <!-- container --> 
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+    <div class="content">
+	
+
+
+	
+		<div class="page-header">		
+			<h1> shell信号处理</h1>
+		</div>		
+	
+
+
+
+<div class="row post">
+	<!-- cols -->
+	
+	<div id="top_meta"></div>
+	<div class="col-md-9" >
+	
+
+	<!-- content -->
+	<div class="mypage">		
+	  		
+
+	  <p>我们写c/c++，java，python应该都见过信号处理，写shell也用过，不过最多的是ctrl+c，kill -9，之前我也不知道shell有信号处理这个机制，我们要更新或者停止就立马kill，就像正好好在吃饭，突然你就粗暴的把桌子掀了！</p>
+<p>其实我们完全可以委婉，温柔点对待它的。<br><a id="more"></a><br>比如你的脚本需要更改配置，完全可以先改配置文件，再向它发个信号告诉他更新一下；</p>
+<p>比如你的脚本正在统计或者和不停第三方系统交互，你可以发个信号给他，告诉他你要退出了，这样他完全可以处理中断就退出。</p>
+<p>这就用到了信号处理，实现信号处理非常简单:</p>
+<h2 id="[1]_处理信号函数">[1] 处理信号函数</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">deal_signal</span></span>()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">echo</span> <span class="string">""</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">"BYE~"</span></span><br><span class="line">    <span class="built_in">exit</span> <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="[2]_注册信号">[2] 注册信号</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">init_signal</span></span>()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">#trap 信号处理函数 相应的信号</span></span><br><span class="line">    <span class="comment">#相应的信号量值 左拐 百度</span></span><br><span class="line">    <span class="built_in">trap</span> <span class="string">"deal_signal"</span> <span class="number">1</span> <span class="number">2</span> <span class="number">3</span> <span class="number">24</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="[3]_初始化信号">[3] 初始化信号</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">init_signal</span><br></pre></td></tr></table></figure>
+<h2 id="[4]_效果预览">[4] 效果预览</h2><p>我们直接ctrl+c，如果是后台运行的,执行kill -2 进程id<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">please select server to login:</span><br><span class="line">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br><span class="line">[<span class="number">1</span>] <span class="number">10.1</span>.<span class="number">17.137</span>  root</span><br><span class="line">[<span class="number">2</span>] <span class="number">10.1</span>.<span class="number">17.141</span>  root</span><br><span class="line">[<span class="number">3</span>] <span class="number">10.1</span>.<span class="number">2.193</span>   admin</span><br><span class="line">[<span class="number">4</span>] update list</span><br><span class="line">[<span class="number">5</span>] <span class="built_in">exit</span></span><br><span class="line">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br><span class="line">select: ^C</span><br><span class="line">BYE~</span><br><span class="line">[yq] <span class="variable">$HOME</span>/sbin&gt;</span><br></pre></td></tr></table></figure></p>
+	  
+	</div>
+
+	
+	<div>
+  	<center>
+	<div class="pagination">
+<ul class="pagination">
+	 
+		
+          <li class="prev disabled"><a><i class="fa fa-arrow-circle-o-left"></i>上一页</a></li>
+        
+
+        <li><a href="/tags/回忆录"><i class="fa fa-archive"></i>文章</a></li>
+
+		
+		   <li class="next"><a href="/2015/10/18/yuan_bian/" class="alignright next">下一页<i class="fa fa-arrow-circle-o-right"></i></a></li>         
+        
+	
+</ul>
+</div>
+
+	</center>
+	</div>
+	
+	
+	<!-- comment -->
+	
+	<section id="comment">
+  <!--h2 class="title">留言</h2-->
+  
+  	 <div class="ds-thread" data-thread-key="2015/11/20/shell_signal/" data-title="shell信号处理" data-url="http://jibuzhu.net/2015/11/20/shell_signal/"></div>  
+  
+</section>
+
+	
+	</div> <!-- col-md-9/col-md-12 -->
+		
+	
+	
+	<div id="side_meta">
+	    <div class="col-md-3" id="post_meta"> 
+	
+	<!-- date -->
+	<div class="meta-widget">
+	<i class="fa fa-clock-o"></i>
+	2015-11-20 
+	</div>
+	
+
+	
+	<!-- busuanzi -->
+	<div class="meta-widget">
+	<i class="fa fa-eye"></i>
+	<span id="busuanzi_container_page_pv">阅读 <span id="busuanzi_value_page_pv"></span></span>
+	</div>
+	
+
+	
+
+	
+	<!-- tags -->
+	<div class="meta-widget">
+	<a data-toggle="collapse" data-target="#tags"><i class="fa fa-tags"></i></a>
+	标签
+	<ul id="tags" class="tag_box inline list-unstyled">	  
+	    
+  <li><a href="/tags/shell/">shell<span>1</span></a></li> <li><a href="/tags/猿世界/">猿世界<span>2</span></a></li> <li><a href="/tags/脚本/">脚本<span>1</span></a></li>
+	</ul>
+	</div>
+		
+
+	<!-- toc -->
+	<div class="meta-widget">
+	
+	</div>
+	
+    <hr>
+
+    <!-- custom menu bar here -->
+	
+</div><!-- col-md-3 -->
+
+	</div>
+		
+		
+</div><!-- row -->
+
+<script type="text/javascript">
+  var duoshuoQuery = { short_name: 'jibuzhu' };
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';
+    ds.async = true;
+    ds.src = 'http://static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script>
+
+
+
+
+    </div>
+  </div>
+  
+
+
+  <div class="container-narrow">
+    <footer> <p>
+  &copy; 2015 大白菜2块一斤
+  
+    Designed By <a href="/about">radishqiu</a> Based On <a href="https://gitcafe.com/">gitcafe</a>&<a href="https://github.com/">github</a>
+</p>
+ </footer>
+  </div> <!-- container-narrow -->
+  
+<a id="gotop" href="#">   
+  <span>▲</span> 
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/search.js"></script> 
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+
+
+  <!--<![endif]--> 
+</body>
+   </html>
